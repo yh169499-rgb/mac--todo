@@ -2,6 +2,11 @@ import XCTest
 @testable import TodaysTodoApp
 
 final class ReminderScheduleTests: XCTestCase {
+    func testNotificationRuntimeRequiresAppBundle() {
+        XCTAssertFalse(ReminderScheduler.isAppBundle(URL(fileURLWithPath: "/tmp/.build/debug/TodaysTodoApp")))
+        XCTAssertTrue(ReminderScheduler.isAppBundle(URL(fileURLWithPath: "/tmp/TodaysTodoApp.app")))
+    }
+
     func testValidHours() {
         XCTAssertTrue(ReminderSchedule.isValidHour(10))
         XCTAssertTrue(ReminderSchedule.isValidHour(19))

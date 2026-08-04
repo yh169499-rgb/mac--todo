@@ -3,7 +3,7 @@ import UserNotifications
 
 @MainActor
 final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
-    private let center = UNUserNotificationCenter.current()
+    private let center: UNUserNotificationCenter?
     private let calendar: Calendar
     private var timer: Timer?
     private var sentHours = Set<Int>()
@@ -11,11 +11,18 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
 
     init(calendar: Calendar = .current) {
         self.calendar = calendar
+        let notificationCenter = Self.isAppBundle(Bundle.main.bundleURL) ? UNUserNotificationCenter.current() : nil
+        self.center = notificationCenter
         super.init()
-        center.delegate = self
+        notificationCenter?.delegate = self
+    }
+
+    static func isAppBundle(_ url: URL) -> Bool {
+        url.pathExtension.caseInsensitiveCompare("app") == .orderedSame
     }
 
     func start(remainingCount: @escaping () -> Int) {
+        guard let center else { return }
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         scheduleNext(remainingCount: remainingCount)
     }
@@ -48,6 +55,7 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
     }
 
     private func postNotification(dateKey: String, remainingCount: Int) {
+        guard let center else { return }
         let content = UNMutableNotificationContent()
         content.title = "看一下今日待办"
         content.body = remainingCount > 0 ? "还有 (remainingCount) 项未完成" : "今天的待办已完成"
