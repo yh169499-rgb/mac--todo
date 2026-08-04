@@ -4,7 +4,7 @@ import SwiftUI
 @MainActor
 final class FloatingPanelController {
     private let store: TodoStore
-    private var panel: NSPanel?
+    private var panel: FloatingPanel?
     private var expandedFrame: NSRect?
     private var isCollapsed = false
 
@@ -41,7 +41,7 @@ final class FloatingPanelController {
     }
 
     private func createPanel() {
-        let panel = NSPanel(contentRect: defaultFrame(), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        let panel = FloatingPanel(contentRect: defaultFrame(), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isOpaque = false
@@ -49,6 +49,7 @@ final class FloatingPanelController {
         panel.hasShadow = true
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
+        panel.becomesKeyOnlyIfNeeded = true
         panel.contentView = NSHostingView(rootView: TodoPanelView(store: store) { [weak self] in self?.collapse() })
         self.panel = panel
     }
@@ -57,6 +58,11 @@ final class FloatingPanelController {
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         return NSRect(x: visible.maxX - 320, y: visible.maxY - 390, width: 300, height: 360)
     }
+}
+
+final class FloatingPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 }
 
 private struct CollapsedBubbleView: View {
