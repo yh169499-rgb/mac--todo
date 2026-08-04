@@ -71,7 +71,7 @@ struct TodoPanelView: View {
                 Text(error).font(.caption2).foregroundStyle(.red).padding(.horizontal, 14).padding(.bottom, 8)
             }
         }
-        .frame(width: 300, height: 480)
+        .frame(minWidth: 280, idealWidth: 300, maxWidth: .infinity, minHeight: 420, idealHeight: 480, maxHeight: .infinity)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }

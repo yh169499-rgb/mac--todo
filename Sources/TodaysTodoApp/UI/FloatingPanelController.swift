@@ -32,7 +32,10 @@ final class FloatingPanelController {
         let frame = NSRect(x: panel.frame.minX, y: panel.frame.minY, width: 42, height: 42)
         isCollapsed = true
         panel.setFrame(frame, display: true, animate: true)
-        panel.contentView = NSHostingView(rootView: CollapsedBubbleView { [weak self] in self?.expand() })
+        panel.contentView = NSHostingView(rootView: CollapsedBubbleView(
+            expand: { [weak self] in self?.expand() },
+            move: { [weak self] delta in self?.moveBubble(by: delta) }
+        ))
     }
 
     private func expand() {
@@ -45,8 +48,10 @@ final class FloatingPanelController {
     }
 
     private func createPanel() {
-        let panel = FloatingPanel(contentRect: defaultFrame(), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        let panel = FloatingPanel(contentRect: defaultFrame(), styleMask: FloatingPanel.defaultStyleMask, backing: .buffered, defer: false)
         panel.level = .floating
+        panel.minSize = NSSize(width: 280, height: 420)
+        panel.maxSize = NSSize(width: 560, height: 760)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isOpaque = false
         panel.backgroundColor = .clear
@@ -58,19 +63,37 @@ final class FloatingPanelController {
         self.panel = panel
     }
 
+    private func moveBubble(by delta: CGSize) {
+        guard let panel, isCollapsed else { return }
+        var origin = panel.frame.origin
+        origin.x += delta.width
+        origin.y -= delta.height
+        panel.setFrameOrigin(origin)
+        UserDefaults.standard.set(NSStringFromPoint(origin), forKey: "TodaysTodoApp.bubbleOrigin")
+    }
+
     private func defaultFrame() -> NSRect {
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        return NSRect(x: visible.maxX - 320, y: visible.maxY - 390, width: 300, height: 360)
+        if let saved = UserDefaults.standard.string(forKey: "TodaysTodoApp.bubbleOrigin") {
+            let origin = NSPointFromString(saved)
+            return NSRect(x: origin.x, y: origin.y, width: 300, height: 480)
+        }
+        return NSRect(x: visible.maxX - 320, y: visible.maxY - 510, width: 300, height: 480)
     }
 }
 
 final class FloatingPanel: NSPanel {
+    static let defaultStyleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .resizable]
+
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 }
 
 private struct CollapsedBubbleView: View {
     let expand: () -> Void
+    let move: (CGSize) -> Void
+    @State private var lastTranslation = CGSize.zero
+
     var body: some View {
         Button(action: expand) {
             Image(systemName: "checkmark")
@@ -81,5 +104,17 @@ private struct CollapsedBubbleView: View {
         }
         .buttonStyle(.plain)
         .shadow(radius: 8, y: 3)
+        .highPriorityGesture(
+            DragGesture()
+                .onChanged { value in
+                    let delta = CGSize(
+                        width: value.translation.width - lastTranslation.width,
+                        height: value.translation.height - lastTranslation.height
+                    )
+                    move(delta)
+                    lastTranslation = value.translation
+                }
+                .onEnded { _ in lastTranslation = .zero }
+        )
     }
 }
