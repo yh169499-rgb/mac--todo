@@ -4,11 +4,15 @@ import SwiftUI
 @MainActor
 final class FloatingPanelController {
     private let store: TodoStore
+    private let notes: NotesStore
     private var panel: FloatingPanel?
     private var expandedFrame: NSRect?
     private var isCollapsed = false
 
-    init(store: TodoStore) { self.store = store }
+    init(store: TodoStore, notes: NotesStore) {
+        self.store = store
+        self.notes = notes
+    }
 
     func show() {
         if panel == nil { createPanel() }
@@ -35,7 +39,7 @@ final class FloatingPanelController {
         guard let panel else { return }
         let target = expandedFrame ?? defaultFrame()
         isCollapsed = false
-        panel.contentView = NSHostingView(rootView: TodoPanelView(store: store) { [weak self] in self?.collapse() })
+        panel.contentView = NSHostingView(rootView: TodoPanelView(store: store, notes: notes) { [weak self] in self?.collapse() })
         panel.setFrame(target, display: true, animate: true)
         panel.orderFrontRegardless()
     }
@@ -50,7 +54,7 @@ final class FloatingPanelController {
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.becomesKeyOnlyIfNeeded = true
-        panel.contentView = NSHostingView(rootView: TodoPanelView(store: store) { [weak self] in self?.collapse() })
+        panel.contentView = NSHostingView(rootView: TodoPanelView(store: store, notes: notes) { [weak self] in self?.collapse() })
         self.panel = panel
     }
 

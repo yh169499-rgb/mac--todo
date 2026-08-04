@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TodoPanelView: View {
     @ObservedObject var store: TodoStore
+    @ObservedObject var notes: NotesStore
     let collapse: () -> Void
     @State private var draft = ""
 
@@ -24,6 +25,20 @@ struct TodoPanelView: View {
                     .buttonStyle(.plain).foregroundStyle(.secondary)
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 12)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("注意事项")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                TextEditor(text: $notes.text)
+                    .font(.system(size: 12))
+                    .scrollContentBackground(.hidden)
+                    .padding(6)
+                    .frame(height: 82)
+                    .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 10))
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 10)
 
             if store.items.isEmpty {
                 VStack(spacing: 8) {
@@ -56,7 +71,7 @@ struct TodoPanelView: View {
                 Text(error).font(.caption2).foregroundStyle(.red).padding(.horizontal, 14).padding(.bottom, 8)
             }
         }
-        .frame(width: 300, height: 360)
+        .frame(width: 300, height: 480)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
@@ -88,6 +103,11 @@ private struct TodoRow: View {
                 .textFieldStyle(.plain)
                 .strikethrough(item.isCompleted)
                 .foregroundStyle(item.isCompleted ? .secondary : .primary)
+            if item.isCarryOver {
+                Text("延续")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.orange)
+            }
             Button { store.delete(item) } label: { Image(systemName: "xmark") }
                 .buttonStyle(.plain).foregroundStyle(.secondary)
         }

@@ -11,6 +11,7 @@ final class TodoStore: ObservableObject {
     private let calendar: Calendar
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var currentDate = Date()
 
     init(storageURL: URL? = nil, calendar: Calendar = .current) {
         self.calendar = calendar
@@ -23,13 +24,33 @@ final class TodoStore: ObservableObject {
         refreshForToday()
     }
 
-    var todayKey: String { ReminderSchedule.dayKey(for: .now, calendar: calendar) }
+    var todayKey: String { ReminderSchedule.dayKey(for: currentDate, calendar: calendar) }
 
     var remainingCount: Int { items.filter { !$0.isCompleted }.count }
 
     func refreshForToday(date: Date = .now) {
+        currentDate = date
         let key = ReminderSchedule.dayKey(for: date, calendar: calendar)
-        items = days[key]?.items ?? []
+        var todayItems = days[key]?.items ?? []
+        if let previousDate = calendar.date(byAdding: .day, value: -1, to: date) {
+            let previousKey = ReminderSchedule.dayKey(for: previousDate, calendar: calendar)
+            if let previousDay = days[previousKey] {
+                let carryOver = previousDay.items.filter { !$0.isCompleted }.map { item in
+                    var carried = item
+                    carried.isCarryOver = true
+                    return carried
+                }
+                let existingIDs = Set(todayItems.map(\.id))
+                let newCarryOver = carryOver.filter { !existingIDs.contains($0.id) }
+                if !newCarryOver.isEmpty {
+                    todayItems = newCarryOver + todayItems
+                    days[previousKey] = TodoDay(dateKey: previousKey, items: previousDay.items.filter(\.isCompleted))
+                    days[key] = TodoDay(dateKey: key, items: todayItems)
+                    save()
+                }
+            }
+        }
+        items = todayItems
     }
 
     @discardableResult

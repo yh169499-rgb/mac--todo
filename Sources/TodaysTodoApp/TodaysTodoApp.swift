@@ -14,6 +14,7 @@ struct TodaysTodoApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: TodoStore!
+    private var notes: NotesStore!
     private var scheduler: ReminderScheduler!
     private var panelController: FloatingPanelController!
     private var statusBarController: StatusBarController!
@@ -21,8 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         store = TodoStore()
+        notes = NotesStore()
         scheduler = ReminderScheduler()
-        panelController = FloatingPanelController(store: store)
+        panelController = FloatingPanelController(store: store, notes: notes)
         statusBarController = StatusBarController(panelController: panelController, scheduler: scheduler, store: store)
         scheduler.start { [weak self] in self?.store.remainingCount ?? 0 }
         try? SMAppService.mainApp.register()
