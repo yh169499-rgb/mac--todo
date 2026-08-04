@@ -12,6 +12,17 @@
 swift run TodaysTodoApp
 ```
 
+## 打包成 macOS 应用
+
+运行下面的脚本会生成真正可双击的 `dist/TodaysTodoApp.app`：
+
+```bash
+./scripts/package-app.sh
+open dist/TodaysTodoApp.app
+```
+
+首次打开时，如果 macOS 提示“无法验证开发者”，可在“系统设置 → 隐私与安全性”中允许打开。应用是本地 ad-hoc 签名，未做 App Store 公证。
+
 数据存储在 `~/Library/Application Support/TodaysTodoApp/todos.json`。应用启动时会尝试注册登录启动；系统设置或未签名运行环境可能限制该行为。
 
 ## 验证
