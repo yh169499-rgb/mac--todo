@@ -101,16 +101,17 @@ private struct CollapsedBubbleView: View {
     @State private var lastTranslation = CGSize.zero
 
     var body: some View {
-        Button(action: expand) {
+        ZStack {
             Image(systemName: "checkmark")
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 42, height: 42)
                 .background(Color.accentColor, in: Circle())
         }
-        .buttonStyle(.plain)
         .shadow(radius: 8, y: 3)
-        .highPriorityGesture(
+        .contentShape(Circle())
+        .onTapGesture(perform: expand)
+        .gesture(
             DragGesture()
                 .onChanged { value in
                     let delta = CGSize(
@@ -122,5 +123,6 @@ private struct CollapsedBubbleView: View {
                 }
                 .onEnded { _ in lastTranslation = .zero }
         )
+        .accessibilityAddTraits(.isButton)
     }
 }
