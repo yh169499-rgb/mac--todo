@@ -29,7 +29,9 @@ final class FloatingPanelController {
     func collapse() {
         guard let panel, !isCollapsed else { return }
         expandedFrame = panel.frame
-        let frame = NSRect(x: panel.frame.minX, y: panel.frame.minY, width: 42, height: 42)
+        let origin = savedBubbleOrigin() ?? panel.frame.origin
+        UserDefaults.standard.set(NSStringFromPoint(origin), forKey: "TodaysTodoApp.bubbleOrigin")
+        let frame = NSRect(origin: origin, size: NSSize(width: 42, height: 42))
         isCollapsed = true
         panel.setFrame(frame, display: true, animate: true)
         panel.contentView = NSHostingView(rootView: CollapsedBubbleView(
@@ -75,11 +77,16 @@ final class FloatingPanelController {
         UserDefaults.standard.set(NSStringFromPoint(origin), forKey: "TodaysTodoApp.bubbleOrigin")
     }
 
+    private func savedBubbleOrigin() -> NSPoint? {
+        guard let saved = UserDefaults.standard.string(forKey: "TodaysTodoApp.bubbleOrigin") else { return nil }
+        return NSPointFromString(saved)
+    }
+
     private func defaultFrame() -> NSRect {
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let size = NSSize(width: 300, height: 480)
-        if let saved = UserDefaults.standard.string(forKey: "TodaysTodoApp.bubbleOrigin") {
-            var origin = NSPointFromString(saved)
+        if let saved = savedBubbleOrigin() {
+            var origin = saved
             origin.x = min(max(origin.x, visible.minX + 8), visible.maxX - size.width - 8)
             origin.y = min(max(origin.y, visible.minY + 8), visible.maxY - size.height - 8)
             return NSRect(origin: origin, size: size)
