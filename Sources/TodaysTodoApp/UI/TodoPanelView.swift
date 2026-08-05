@@ -41,11 +41,10 @@ struct TodoPanelView: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(Color.secondary.opacity(0.35))
                     .frame(width: 42, height: 4)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 3)
+                    .frame(maxWidth: .infinity, minHeight: 14)
                     .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
+                    .highPriorityGesture(
+                        DragGesture(minimumDistance: 1)
                             .onChanged { value in
                                 let delta = value.translation.height - notesDragStart
                                 notesHeight = min(max(notesHeight + delta, 48), 220)
