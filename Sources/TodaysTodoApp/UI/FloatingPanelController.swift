@@ -68,17 +68,23 @@ final class FloatingPanelController {
         var origin = panel.frame.origin
         origin.x += delta.width
         origin.y -= delta.height
+        let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        origin.x = min(max(origin.x, visible.minX + 8), visible.maxX - panel.frame.width - 8)
+        origin.y = min(max(origin.y, visible.minY + 8), visible.maxY - panel.frame.height - 8)
         panel.setFrameOrigin(origin)
         UserDefaults.standard.set(NSStringFromPoint(origin), forKey: "TodaysTodoApp.bubbleOrigin")
     }
 
     private func defaultFrame() -> NSRect {
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let size = NSSize(width: 300, height: 480)
         if let saved = UserDefaults.standard.string(forKey: "TodaysTodoApp.bubbleOrigin") {
-            let origin = NSPointFromString(saved)
-            return NSRect(x: origin.x, y: origin.y, width: 300, height: 480)
+            var origin = NSPointFromString(saved)
+            origin.x = min(max(origin.x, visible.minX + 8), visible.maxX - size.width - 8)
+            origin.y = min(max(origin.y, visible.minY + 8), visible.maxY - size.height - 8)
+            return NSRect(origin: origin, size: size)
         }
-        return NSRect(x: visible.maxX - 320, y: visible.maxY - 510, width: 300, height: 480)
+        return NSRect(x: visible.maxX - size.width - 20, y: visible.maxY - size.height - 20, width: size.width, height: size.height)
     }
 }
 
