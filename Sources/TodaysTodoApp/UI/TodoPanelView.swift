@@ -5,6 +5,8 @@ struct TodoPanelView: View {
     @ObservedObject var notes: NotesStore
     let collapse: () -> Void
     @State private var draft = ""
+    @AppStorage("TodaysTodoApp.notesHeight") private var notesHeight: Double = 82
+    @State private var notesDragStart: CGFloat = 0
 
     private var dateLabel: String {
         let formatter = DateFormatter()
@@ -34,8 +36,23 @@ struct TodoPanelView: View {
                     .font(.system(size: 12))
                     .scrollContentBackground(.hidden)
                     .padding(6)
-                    .frame(height: 82)
+                    .frame(height: notesHeight)
                     .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 10))
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.secondary.opacity(0.35))
+                    .frame(width: 42, height: 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 3)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                let delta = value.translation.height - notesDragStart
+                                notesHeight = min(max(notesHeight + delta, 48), 220)
+                                notesDragStart = value.translation.height
+                            }
+                            .onEnded { _ in notesDragStart = 0 }
+                    )
             }
             .padding(.horizontal, 14)
             .padding(.bottom, 10)
