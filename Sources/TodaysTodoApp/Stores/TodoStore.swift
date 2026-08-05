@@ -11,13 +11,15 @@ final class TodoStore: ObservableObject {
     private let calendar: Calendar
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private let documentStore: TodoDocumentStore?
     private var currentDate = Date()
 
-    init(storageURL: URL? = nil, calendar: Calendar = .current) {
+    init(storageURL: URL? = nil, calendar: Calendar = .current, documentStore: TodoDocumentStore? = nil) {
         self.calendar = calendar
         self.storageURL = storageURL ?? Self.defaultStorageURL()
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
+        self.documentStore = documentStore
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
         load()
@@ -42,15 +44,23 @@ final class TodoStore: ObservableObject {
                 }
                 let existingIDs = Set(todayItems.map(\.id))
                 let newCarryOver = carryOver.filter { !existingIDs.contains($0.id) }
+                var didChange = false
                 if !newCarryOver.isEmpty {
                     todayItems = newCarryOver + todayItems
-                    days[previousKey] = TodoDay(dateKey: previousKey, items: previousDay.items.filter(\.isCompleted))
+                    days[previousKey] = TodoDay(dateKey: previousKey, items: [])
                     days[key] = TodoDay(dateKey: key, items: todayItems)
+                    didChange = true
+                } else if !previousDay.items.isEmpty {
+                    days[previousKey] = TodoDay(dateKey: previousKey, items: [])
+                    didChange = true
+                }
+                if didChange {
                     save()
                 }
             }
         }
         items = todayItems
+        syncDocument()
     }
 
     @discardableResult
@@ -108,9 +118,14 @@ final class TodoStore: ObservableObject {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try data.write(to: storageURL, options: .atomic)
             lastError = nil
+            syncDocument()
         } catch {
             lastError = "无法保存待办数据"
         }
+    }
+
+    private func syncDocument() {
+        documentStore?.update(date: todayKey, items: items)
     }
 
     private static func defaultStorageURL() -> URL {

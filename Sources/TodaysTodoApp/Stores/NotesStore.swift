@@ -10,9 +10,11 @@ final class NotesStore: ObservableObject {
     }
 
     private let storageURL: URL
+    private let documentStore: TodoDocumentStore?
     private var isLoading = true
 
-    init(storageURL: URL? = nil) {
+    init(storageURL: URL? = nil, documentStore: TodoDocumentStore? = nil) {
+        self.documentStore = documentStore
         if let storageURL {
             self.storageURL = storageURL
         } else {
@@ -23,6 +25,7 @@ final class NotesStore: ObservableObject {
             text = saved
         }
         isLoading = false
+        documentStore?.update(notes: text)
     }
 
     private func save() {
@@ -30,6 +33,7 @@ final class NotesStore: ObservableObject {
             let directory = storageURL.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try text.write(to: storageURL, atomically: true, encoding: .utf8)
+            documentStore?.update(notes: text)
         } catch {
             // Notes remain available in memory if the local file cannot be written.
         }

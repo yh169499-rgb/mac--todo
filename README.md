@@ -23,7 +23,7 @@ open dist/TodaysTodoApp.app
 
 首次打开时，如果 macOS 提示“无法验证开发者”，可在“系统设置 → 隐私与安全性”中允许打开。应用是本地 ad-hoc 签名，未做 App Store 公证。
 
-待办数据存储在 `~/Library/Application Support/TodaysTodoApp/todos.json`，注意事项存储在同目录的 `notes.txt`。应用启动时会尝试注册登录启动；系统设置或未签名运行环境可能限制该行为。
+待办数据存储在 `~/Library/Application Support/TodaysTodoApp/todos.json`，注意事项存储在同目录的 `notes.txt`；同时会持续更新同目录的 `Todo记录.md`，作为可阅读、可备份的永久记录文档。应用启动时会尝试注册登录启动；系统设置或未签名运行环境可能限制该行为。
 
 ## 验证
 

@@ -40,5 +40,8 @@ final class TodoStoreTests: XCTestCase {
         XCTAssertEqual(store.items.count, 1)
         XCTAssertTrue(store.items[0].isCarryOver)
         XCTAssertFalse(store.items[0].isCompleted)
+
+        store.refreshForToday(date: yesterday)
+        XCTAssertTrue(store.items.isEmpty)
     }
 }
