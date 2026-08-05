@@ -12,6 +12,20 @@
 swift run TodaysTodoApp
 ```
 
+## 源码与二次开发
+
+源码仓库：<https://github.com/yh169499-rgb/mac--todo>
+
+其他开发者或 AI 可以直接克隆并修改：
+
+```bash
+git clone https://github.com/yh169499-rgb/mac--todo.git
+cd mac--todo
+git checkout agent/mac-todo
+```
+
+修改 `Sources/TodaysTodoApp/` 下的 Swift 文件后，运行 `./scripts/package-app.sh` 即可重新生成 `dist/TodaysTodoApp.app`。GitHub Release 页面也提供对应标签的 Source code ZIP，适合直接交给 AI 阅读和更新。
+
 ## 打包成 macOS 应用
 
 运行下面的脚本会生成真正可双击的 `dist/TodaysTodoApp.app`：
