@@ -15,6 +15,9 @@ final class FloatingPanelController {
     }
 
     func show() {
+        // The menu-bar app can stay alive overnight. Refresh the day before showing
+        // the panel so unfinished tasks are carried over even without relaunching.
+        store.refreshForToday()
         if panel == nil { createPanel() }
         if isCollapsed { expand() }
         panel?.orderFrontRegardless()
