@@ -44,4 +44,32 @@ final class TodoStoreTests: XCTestCase {
         store.refreshForToday(date: yesterday)
         XCTAssertTrue(store.items.isEmpty)
     }
+
+    func testCarriesUnfinishedItemsAcrossDaysWithoutOpeningApp() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 8 * 3600)!
+        let lastOpenedDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2030, month: 8, day: 14, hour: 9)))
+        let reopenedDate = try XCTUnwrap(calendar.date(from: DateComponents(year: 2030, month: 8, day: 17, hour: 9)))
+        let lastOpenedKey = ReminderSchedule.dayKey(for: lastOpenedDate, calendar: calendar)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("carry-gap-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let unfinished = TodoItem(title: "周末前未完成", createdAt: lastOpenedDate, updatedAt: lastOpenedDate)
+        var completed = TodoItem(title: "周末前已完成", createdAt: lastOpenedDate, updatedAt: lastOpenedDate)
+        completed.isCompleted = true
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode([
+            lastOpenedKey: TodoDay(dateKey: lastOpenedKey, items: [unfinished, completed])
+        ]).write(to: url)
+
+        let store = TodoStore(storageURL: url, calendar: calendar)
+        store.refreshForToday(date: reopenedDate)
+
+        XCTAssertEqual(store.items.map(\.title), ["周末前未完成"])
+        XCTAssertTrue(store.items[0].isCarryOver)
+
+        store.refreshForToday(date: lastOpenedDate)
+        XCTAssertTrue(store.items.isEmpty)
+    }
 }

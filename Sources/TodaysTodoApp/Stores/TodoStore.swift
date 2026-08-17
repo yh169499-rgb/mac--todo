@@ -34,30 +34,23 @@ final class TodoStore: ObservableObject {
         currentDate = date
         let key = ReminderSchedule.dayKey(for: date, calendar: calendar)
         var todayItems = days[key]?.items ?? []
-        if let previousDate = calendar.date(byAdding: .day, value: -1, to: date) {
-            let previousKey = ReminderSchedule.dayKey(for: previousDate, calendar: calendar)
-            if let previousDay = days[previousKey] {
-                let carryOver = previousDay.items.filter { !$0.isCompleted }.map { item in
-                    var carried = item
-                    carried.isCarryOver = true
-                    return carried
-                }
-                let existingIDs = Set(todayItems.map(\.id))
-                let newCarryOver = carryOver.filter { !existingIDs.contains($0.id) }
-                var didChange = false
-                if !newCarryOver.isEmpty {
-                    todayItems = newCarryOver + todayItems
-                    days[previousKey] = TodoDay(dateKey: previousKey, items: [])
-                    days[key] = TodoDay(dateKey: key, items: todayItems)
-                    didChange = true
-                } else if !previousDay.items.isEmpty {
-                    days[previousKey] = TodoDay(dateKey: previousKey, items: [])
-                    didChange = true
-                }
-                if didChange {
-                    save()
-                }
+        let previousKey = days.keys
+            .filter { $0 < key }
+            .max()
+        if let previousKey, let previousDay = days[previousKey], !previousDay.items.isEmpty {
+            let carryOver = previousDay.items.filter { !$0.isCompleted }.map { item in
+                var carried = item
+                carried.isCarryOver = true
+                return carried
             }
+            let existingIDs = Set(todayItems.map(\.id))
+            let newCarryOver = carryOver.filter { !existingIDs.contains($0.id) }
+            if !newCarryOver.isEmpty {
+                todayItems = newCarryOver + todayItems
+                days[key] = TodoDay(dateKey: key, items: todayItems)
+            }
+            days[previousKey] = TodoDay(dateKey: previousKey, items: [])
+            save()
         }
         items = todayItems
         syncDocument()
